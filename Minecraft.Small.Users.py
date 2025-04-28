@@ -31,39 +31,28 @@ def generate_case_variations(username):
 def check_namemc_status(username):
     url = f"https://namemc.com/search?q={username}"
     response = requests.get(url)
-    
     if any(keyword in response.text for keyword in ["Unavailable"]):
         return False
-
     url = f"https://namemc.com/search?q={username}"
     response = requests.get(url)
-    
     if any(keyword in response.text for keyword in ["Available"]):
         return True
-
     return None
 
 def check_username_availability(username, checked_usernames):
     username_lower = username.lower()
-
     if username_lower in checked_usernames:
         return
-
     checked_usernames.add(username_lower)
-
     variations = generate_case_variations(username)
     found_taken = False
-
     for variant in variations:
         url = f"https://api.mojang.com/users/profiles/minecraft/{variant}"
         response = requests.get(url)
-
         if "The request is blocked." in response.text:
             return
-
         if "id" in response.json() and not ("errorMessage" in response.text or "name" in response.json()):
             return
-
         if response.status_code == 400 and "errorMessage" in response.text:
             namemc_status = check_namemc_status(variant)
             if namemc_status:
@@ -71,11 +60,9 @@ def check_username_availability(username, checked_usernames):
                 return
             else:
                 found_taken = True
-
         if response.status_code == 200 and "name" in response.json():
             found_taken = True
             break
-
     if found_taken:
         print(f"\033[91m{username} - Used\033[0m")
     else:
@@ -83,20 +70,15 @@ def check_username_availability(username, checked_usernames):
 
 def main():
     lengths = get_username_length_range()
-    
     num_checks = int(input(f"Enter the number of usernames of length(s) {lengths} to generate and check: "))
-    
     checked_usernames = set()
-
     for length in lengths:
         print(f"\nChecking usernames of length {length}:")
         for i in range(num_checks):
             if i % 100 == 0:
                 print(f"Checking {i + 1} of {num_checks} usernames of length {length}...")
-
             username = generate_username(length)
             check_username_availability(username, checked_usernames)
-
     input("\nPress Enter to exit...")
 
 if __name__ == "__main__":
